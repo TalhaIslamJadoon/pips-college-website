@@ -443,6 +443,44 @@ figure img,.card img{background:#e9e4d2}
   .tb-side{gap:6px 12px}
 }
 
+/* ===== HERO PROMENADE — students walking across the campus scene ===== */
+/* Layer order: building photo (bottom) → walking students → dark shade →
+   headline block (top), so text readability stays exactly as before.
+   All motion is transform-only; the building drifts far slower than the
+   students walk, which gives the parallax depth. */
+.hero-bg{animation:heroKenBurns 38s ease-in-out infinite alternate}
+@keyframes heroKenBurns{from{scale:1.02;translate:0 0}to{scale:1.09;translate:-1.4% .8%}}
+.hero-promenade{position:absolute;left:0;right:0;bottom:0;height:clamp(150px,27svh,252px);z-index:1;overflow:hidden;pointer-events:none;transition:opacity .8s ease,visibility .8s;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+.hero.video-playing .hero-promenade,.hero:has(.hero-video.is-ready) .hero-promenade{opacity:0;visibility:hidden}
+.walker{position:absolute;left:0;will-change:transform,opacity}
+.walker img{display:block;height:100%;width:auto;max-width:none;animation:walkerBob .58s ease-in-out infinite alternate;will-change:transform}
+.walker-a{height:clamp(118px,20.5svh,208px);bottom:4px;animation:walkAcrossR 46s linear infinite;animation-delay:-19s}
+.walker-b{height:clamp(96px,16.5svh,168px);bottom:16px;animation:walkAcrossL 39s linear infinite;animation-delay:-7s}
+.walker-b img{animation-delay:-.29s}
+@keyframes walkAcrossR{0%{transform:translateX(-115%);opacity:0}5%{opacity:1}95%{opacity:1}100%{transform:translateX(100vw);opacity:0}}
+@keyframes walkAcrossL{0%{transform:translateX(100vw);opacity:0}5%{opacity:1}95%{opacity:1}100%{transform:translateX(-115%);opacity:0}}
+@keyframes walkerBob{from{transform:translateY(0)}to{transform:translateY(-2.6px)}}
+.walker-shadow{position:absolute;left:7%;bottom:0;width:86%;height:11px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(2,10,5,.42),rgba(2,10,5,0) 68%);filter:blur(2.5px);animation:shadowPulse .58s ease-in-out infinite alternate}
+.walker-b .walker-shadow{animation-delay:-.29s}
+@keyframes shadowPulse{from{transform:scaleX(1);opacity:.85}to{transform:scaleX(.93);opacity:.65}}
+.hero.is-offscreen .walker,.hero.is-offscreen .walker img,.hero.is-offscreen .walker-shadow,.hero.is-offscreen .hero-bg{animation-play-state:paused!important}
+@media(max-width:640px){
+  /* On phones the hero stats band is two rows tall and sits over the bottom
+     of the scene — so the promenade strip and the walkers are taller here,
+     letting heads and shoulders rise above the band while the bodies cross
+     behind its frosted glass. Without this the students would be hidden. */
+  .hero-promenade{height:min(37svh,330px)}
+  .walker-a{height:min(32svh,278px);animation-duration:42s}
+  .walker-b{height:min(26svh,224px);bottom:30px;animation-duration:36s}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero-bg{animation:none!important}
+  .walker{animation:none!important}
+  .walker img,.walker-shadow{animation:none!important}
+  .walker-a{transform:translateX(9vw)}
+  .walker-b{transform:translateX(60vw)}
+}
+
 </style>
 <noscript><style>
 /* No-JS fallback: content must be visible even if no script ever runs */
@@ -486,6 +524,10 @@ figure img,.card img{background:#e9e4d2}
 <section class="hero">
   <img class="hero-bg" id="heroBg" src="assets/img-7893b435b867.webp" alt="The PIPS College of Pharmacy building in Abbottabad — white campus building with its blue Pakistan Institute of Professional Studies signboard, pharmacy students in white coats walking in front, green hills behind">
   <video class="hero-video" id="heroVideo" muted loop playsinline autoplay preload="none" poster="assets/img-7893b435b867.webp" aria-hidden="true" tabindex="-1" disablepictureinpicture data-src="https://pips.edu.pk/wp-content/uploads/2024/02/Background-video.mp4"></video>
+  <div class="hero-promenade" id="heroPromenade" aria-hidden="true">
+    <div class="walker walker-a"><span class="walker-shadow"></span><img src="assets/img-58c0605d4d69.webp" alt="" width="980" height="850" decoding="async"></div>
+    <div class="walker walker-b"><span class="walker-shadow"></span><img src="assets/img-af71d8a7a466.webp" alt="" width="820" height="1039" loading="lazy" decoding="async"></div>
+  </div>
   <div class="hero-shade"></div>
   <div class="hero-giant" aria-hidden="true">PIPS</div>
   <div class="wrap hero-content">
@@ -1650,6 +1692,27 @@ figure img,.card img{background:#e9e4d2}
     dv.addEventListener('error', showFallback, true);
     var srcEl = dv.querySelector('source');
     if(srcEl) srcEl.addEventListener('error', showFallback);
+  }
+})();
+</script>
+
+<script>
+(function(){
+  // Hero promenade: hide the walking students while the real drone video is
+  // playing (it already has motion), bring them back when it is not, and
+  // pause every hero animation while the hero is off-screen.
+  var hero=document.querySelector('.hero'); if(!hero) return;
+  var video=document.getElementById('heroVideo');
+  if(video){
+    video.addEventListener('play', function(){ hero.classList.add('video-playing'); });
+    video.addEventListener('pause', function(){ hero.classList.remove('video-playing'); });
+    video.addEventListener('ended', function(){ hero.classList.remove('video-playing'); });
+    video.addEventListener('error', function(){ hero.classList.remove('video-playing'); });
+  }
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(es){ es.forEach(function(en){
+      hero.classList.toggle('is-offscreen', !en.isIntersecting);
+    }); }, {threshold:0.04}).observe(hero);
   }
 })();
 </script>
